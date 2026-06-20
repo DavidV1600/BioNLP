@@ -1,0 +1,14 @@
+*.txt
+*.pdf
+.venv/
+__pycache__/
+*.pt
+*.pth
+*.log
+*.csv
+*.json
+*.zip
+*.tar.gz
+*.bin
+*.pkl
+*.safetensors

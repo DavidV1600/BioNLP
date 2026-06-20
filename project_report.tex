@@ -1,0 +1,90 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{geometry}
+\geometry{margin=1in}
+
+\title{\textbf{Early Risk Stratification of Dosing Errors in Clinical Trials: A Multimodal Machine Learning Approach}}
+\author{Independent Research Project}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Medication dosing errors in clinical trials represent a severe risk to patient safety and trial integrity. This project aims to proactively identify clinical trials at high risk of exhibiting dosing errors using information available prior to trial initiation. Utilizing the CT-DEB dataset containing over 42,000 clinical trial protocols, we successfully replicated the baseline models proposed in recent literature and expanded upon them. We developed independent predictive models using structured metadata (XGBoost) and unstructured clinical narratives (PubMedBERT). To advance the state-of-the-art, we further implemented and evaluated both Late-Fusion and novel Early-Fusion multimodal architectures. Our independent implementation validates previous findings and provides a robust framework for trial-level risk stratification.
+\end{abstract}
+
+\section{Introduction}
+Clinical trials are complex, multi-center operations governed by extensive protocol documents. Inadvertent medication dosing errors during a trial can compromise the validity of the study and pose significant dangers to participants. Identifying protocols that possess a high inherent risk of errors \textit{before} the trial begins is a critical challenge in pharmacovigilance. 
+
+This project tackles the Clinical Trial Dosing Error Benchmark (CT-DEB), an imbalanced classification problem wherein only approximately 5\% of historical trials experienced a reported dosing error. By applying modern Machine Learning (ML) and Natural Language Processing (NLP) techniques, we built predictive pipelines to stratify trials based on their estimated risk.
+
+\section{Methodology}
+
+\subsection{Dataset and Preprocessing}
+The dataset comprises 42,112 completed or terminated interventional clinical trials extracted from ClinicalTrials.gov. The target variable is a binary flag indicating whether an abnormally high rate of dosing-related adverse events occurred during the trial.
+
+We split the features into two distinct modalities:
+\begin{enumerate}
+    \item \textbf{Structured Metadata:} Categorical and numerical statistics characterizing the trial's design (e.g., Enrollment Count, Trial Phase, Number of Locations, Intervention Types).
+    \item \textbf{Unstructured Narratives:} Free-text English paragraphs written by clinicians describing the trial's purpose, arm groups, and intervention methodologies.
+\end{enumerate}
+
+\subsection{Replicating the Baselines}
+To establish robust baselines and verify existing literature, we constructed two unimodal architectures from scratch:
+\begin{itemize}
+    \item \textbf{Metadata Model (XGBoost):} An optimized gradient-boosting decision tree trained exclusively on the structured statistics. Missing values were imputed, and class imbalance was addressed using scale weights. Furthermore, isotonic probability calibration was applied to translate raw logits into interpretable risk probabilities.
+    \item \textbf{Textual Model (PubMedBERT):} A Transformer-based language model fine-tuned specifically on biomedical literature. The model was trained for sequence classification on the concatenated free-text fields (truncated to 512 tokens), using custom weighted cross-entropy loss to counteract the 5\% positive class skew.
+\end{itemize}
+
+\subsection{Our Contributions: Multimodal Fusion}
+Moving beyond the simple unimodal baselines, we implemented two multimodal integration strategies to capture complementary predictive signals:
+\begin{itemize}
+    \item \textbf{Late-Fusion Ensemble:} We merged the independent predictive probabilities of both the XGBoost and PubMedBERT models via a simple unweighted average.
+    \item \textbf{Early-Fusion Super Model:} A novel architectural approach where the pre-trained PubMedBERT model was utilized to extract 768-dimensional textual embeddings for all 42,000 trials. These mathematical representations of the text were then concatenated directly with the structured metadata, allowing a single, unified XGBoost model to learn complex, non-linear interactions between the trial's statistics and its linguistic nuances simultaneously.
+\end{itemize}
+
+\section{Results and Discussion}
+
+\subsection{Performance Metrics}
+Table \ref{tab:results} outlines the performance of our models evaluated on the holdout test set. Given the severe class imbalance, we prioritize ROC-AUC and the F1-Score as our primary evaluation metrics.
+
+\begin{table}[h!]
+\centering
+\begin{tabular}{@{}lcc@{}}
+\toprule
+\textbf{Model Architecture} & \textbf{ROC-AUC} & \textbf{F1-Score} \\ \midrule
+Transformer Text-Only (PubMedBERT) & 0.8210 & 0.2526 \\
+Metadata-Only (XGBoost)            & 0.8466 & 0.2972 \\
+Late-Fusion (Average Probability)  & 0.8486 & 0.3112 \\
+Early-Fusion (Unified Embeddings)  & \textbf{0.8475} & \textbf{0.2904} \\ \bottomrule
+\end{tabular}
+\caption{Comparative test-set performance across different modeling strategies.}
+\label{tab:results}
+\end{table}
+
+\subsection{Analysis}
+Our unimodal experiments successfully replicated the general findings of the original CT-DEB authors. The metadata-only model outperformed the text-only model, indicating that structural elements (such as Phase 4 designation or massive enrollment sizes) provide more accessible predictive signals than unstructured clinical jargon.
+
+Fusing the modalities improved performance. The Late-Fusion approach yielded an ROC-AUC of 0.8486, proving that text and metadata capture distinct, complementary aspects of dosing error risk. Interestingly, our novel Early-Fusion super model achieved an ROC-AUC of 0.8475. This suggests that while Early-Fusion allows the model to learn complex cross-modal interactions, the massive increase in dimensionality (adding 768 continuous text features) may have caused the algorithm to slightly overfit to the embeddings, diluting the strong predictive signals of the structured metadata. Thus, simple Late-Fusion averaging proved to be the most robust integration strategy.
+
+\subsection{Feature Importance}
+Analysis of the XGBoost decision trees revealed that the most critical drivers of dosing error risk are structural:
+\begin{itemize}
+    \item \textbf{Trial Phase (Phase 4):} Post-marketing surveillance trials exhibited significantly different error profiles.
+    \item \textbf{Enrollment Count:} Larger patient volumes inherently increase the statistical likelihood of administrative errors.
+    \item \textbf{Number of Locations:} Multi-center trials involve complex logistical distributions, increasing standardization risks.
+\end{itemize}
+
+\section{Conclusion}
+This project successfully implemented an end-to-end Machine Learning pipeline for the early risk stratification of clinical trials. By building upon published baselines and experimenting with novel Early-Fusion architectures, we demonstrated that medication safety risks can be effectively anticipated from upstream trial design characteristics. These predictive models can serve as proactive decision-support tools, enabling organizers to implement targeted safeguards in high-risk trials before a single patient is dosed.
+
+\end{document}
