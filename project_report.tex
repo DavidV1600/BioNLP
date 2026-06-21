@@ -61,15 +61,17 @@ Table \ref{tab:results} outlines the performance of our models evaluated on the 
 
 \begin{table}[h!]
 \centering
-\begin{tabular}{@{}lcc@{}}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{@{}lcccccc@{}}
 \toprule
-\textbf{Model Architecture} & \textbf{ROC-AUC} & \textbf{F1-Score} \\ \midrule
-Transformer Text-Only (PubMedBERT) & 0.8210 & 0.2526 \\
-Metadata-Only (XGBoost)            & 0.8466 & 0.2972 \\
-Late-Fusion (Average Probability)  & 0.8486 & 0.3112 \\
-Early-Fusion (Unified Embeddings)  & \textbf{0.8475} & \textbf{0.2904} \\ \bottomrule
-\end{tabular}
-\caption{Comparative test-set performance across different modeling strategies.}
+\textbf{Model Architecture} & \textbf{AUC} & \textbf{Brier} & \textbf{F1} & \textbf{Rec} & \textbf{Prec} & \textbf{Acc} \\ \midrule
+Transformer Text-Only (PubMedBERT) & 0.8210 & 0.0789 & 0.2612 & 0.4613 & 0.1822 & 0.8720 \\
+Metadata-Only (XGBoost)            & 0.8466 & \textbf{0.0422} & 0.2975 & 0.4774 & 0.2161 & 0.8894 \\
+Early-Fusion (Unified Embeddings)  & 0.8475 & 0.0425 & 0.2904 & \textbf{0.5387} & 0.1988 & 0.8708 \\
+Late-Fusion (Average Probability)  & \textbf{0.8486} & 0.0495 & \textbf{0.3112} & 0.3323 & \textbf{0.2926} & \textbf{0.9278} \\ \bottomrule
+\end{tabular}%
+}
+\caption{Comprehensive test-set classification performance across different modeling strategies. Best performance per metric is shown in bold.}
 \label{tab:results}
 \end{table}
 
