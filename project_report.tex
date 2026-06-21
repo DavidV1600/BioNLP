@@ -19,18 +19,20 @@
 \maketitle
 
 \begin{abstract}
-Medication dosing errors in clinical trials represent a severe risk to patient safety and trial integrity. This project aims to proactively identify clinical trials at high risk of exhibiting dosing errors using information available prior to trial initiation. Utilizing the CT-DEB dataset containing over 42,000 clinical trial protocols, we successfully replicated the baseline models proposed in recent literature and expanded upon them. We developed independent predictive models using structured metadata (XGBoost) and unstructured clinical narratives (PubMedBERT). To advance the state-of-the-art, we further implemented and evaluated both Late-Fusion and novel Early-Fusion multimodal architectures. Our independent implementation validates previous findings and provides a robust framework for trial-level risk stratification.
+Medication dosing errors in clinical trials represent a severe risk to patient safety and trial integrity. This project aims to proactively identify clinical trials at high risk of exhibiting dosing errors using information available prior to trial initiation. Utilizing the CT-DEB dataset containing over 42,000 clinical trial protocols, we successfully replicated the baseline models proposed by Hêche et al. \cite{heche2026} and expanded upon them. We developed independent predictive models using structured metadata (XGBoost) and unstructured clinical narratives (PubMedBERT). To advance the state-of-the-art, we further implemented and evaluated both Late-Fusion and novel Early-Fusion multimodal architectures. Our independent implementation validates previous findings and provides a robust framework for trial-level risk stratification.
 \end{abstract}
 
 \section{Introduction}
 Clinical trials are complex, multi-center operations governed by extensive protocol documents. Inadvertent medication dosing errors during a trial can compromise the validity of the study and pose significant dangers to participants. Identifying protocols that possess a high inherent risk of errors \textit{before} the trial begins is a critical challenge in pharmacovigilance. 
 
-This project tackles the Clinical Trial Dosing Error Benchmark (CT-DEB), an imbalanced classification problem wherein only approximately 5\% of historical trials experienced a reported dosing error. By applying modern Machine Learning (ML) and Natural Language Processing (NLP) techniques, we built predictive pipelines to stratify trials based on their estimated risk.
+This project tackles the Clinical Trial Dosing Error Benchmark (CT-DEB) introduced by Hêche et al. \cite{heche2026}, an imbalanced classification problem wherein only approximately 5\% of historical trials experienced a reported dosing error. By applying modern Machine Learning (ML) and Natural Language Processing (NLP) techniques, we built predictive pipelines to stratify trials based on their estimated risk.
 
 \section{Methodology}
 
-\subsection{Dataset and Preprocessing}
-The dataset comprises 42,112 completed or terminated interventional clinical trials extracted from ClinicalTrials.gov. The target variable is a binary flag indicating whether an abnormally high rate of dosing-related adverse events occurred during the trial.
+\subsection{Dataset and Distribution}
+The dataset comprises 42,112 completed or terminated interventional clinical trials extracted from ClinicalTrials.gov. The original authors of the CT-DEB benchmark constructed this dataset by cross-referencing trial protocols with public adverse-event databases to identify a binary target variable: whether an abnormally high rate of dosing-related adverse events occurred. 
+
+A critical characteristic of this dataset is its severe class imbalance, with only $\sim$5\% of the trials representing the positive (error) class. To ensure rigorous evaluation and prevent data leakage, we utilized the benchmark's pre-defined data splits: 80\% for training, 10\% for hyper-parameter tuning and validation, and a strict 10\% holdout for final test evaluation.
 
 We split the features into two distinct modalities:
 \begin{enumerate}
@@ -86,5 +88,12 @@ Analysis of the XGBoost decision trees revealed that the most critical drivers o
 
 \section{Conclusion}
 This project successfully implemented an end-to-end Machine Learning pipeline for the early risk stratification of clinical trials. By building upon published baselines and experimenting with novel Early-Fusion architectures, we demonstrated that medication safety risks can be effectively anticipated from upstream trial design characteristics. These predictive models can serve as proactive decision-support tools, enabling organizers to implement targeted safeguards in high-risk trials before a single patient is dosed.
+
+\begin{thebibliography}{9}
+\bibitem{heche2026}
+Hêche, M., et al. (2026).
+\textit{Early Risk Stratification of Dosing Errors in Clinical Trials Using Machine Learning}.
+arXiv preprint.
+\end{thebibliography}
 
 \end{document}
