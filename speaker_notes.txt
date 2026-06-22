@@ -1,0 +1,51 @@
+=============================================================================
+SPEAKER NOTES: Detecting Medication Dosing Errors in Clinical Trial Protocols
+Estimated Time: ~10 Minutes
+=============================================================================
+
+SLIDE 1: Title Slide (0:00 - 0:30)
+"Hello everyone. Today I'll be presenting our work on detecting medication dosing errors in clinical trial protocols using a multimodal machine learning approach. The goal of this project was to see if we could teach an AI to read a clinical trial's 'master plan' and flag high-risk trials before a single patient is ever dosed."
+
+SLIDE 2: Why This Matters (0:30 - 1:30)
+"To understand why this is important, we have to look at the consequences. A medication dosing error during a trial isn't just a logistical hiccup—it can lead to severe patient harm, massive financial costs, and completely invalidate the study's results. 
+Traditionally, reviewing these protocols for risk is done manually by humans, which is incredibly expensive and slow. Our project leverages BioNLP to automate this process by looking at both the structural statistics of a trial and the biomedical text written by the clinicians."
+
+SLIDE 3: The Challenge (1:30 - 2:30)
+"The core challenge we faced is that this is like finding a needle in a haystack. We are dealing with an extreme class imbalance. Out of the thousands of historical trials we analyzed, only about 5% actually experienced a reported dosing error. 
+Because of this 5% imbalance, we couldn't use standard 'Accuracy' as our metric. A completely broken AI could just blindly guess 'No Error' every single time and achieve 95% accuracy! Instead, we had to rely on advanced metrics like ROC-AUC and F1-scores to truly measure classification capability. We also used the Brier Score to measure how well-calibrated and trustworthy our model's probability estimates were."
+
+SLIDE 4: Dataset Overview (2:30 - 3:15)
+"Our data comes from the CT-Dosing-Errors-Benchmark (CT-DEB), which sources its data directly from ClinicalTrials.gov. We processed over 42,000 real-world trial narratives. It's a strict binary classification task: either the trial had a dosing error, or it didn't."
+
+SLIDE 5: Our Approach (3:15 - 4:30)
+"Rather than using rigid, hard-coded rules, we built two independent machine learning pipelines to evaluate different parts of the trial:
+First, the 'Structured Data' branch. We stripped out the text and only looked at the metadata—things like enrollment size and trial phase. We trained a highly optimized XGBoost classifier on these numbers.
+Second, the 'Biomedical NLP' branch. We aggregated all the free-text paragraphs—like the brief summaries and intervention descriptions—and fine-tuned PubMedBERT, a state-of-the-art biomedical language model, to read the text and predict the risk."
+
+SLIDE 6: Modality Fusion (4:30 - 5:30)
+"Once we had our two independent expert models, we wanted to see what would happen if we combined them. We tested two fusion architectures:
+First, 'Late Fusion'—this is simple ensemble averaging. We just took the final probability scores from the XGBoost model and the PubMedBERT model and averaged them.
+Second, we tried a novel 'Early Fusion' super-model. We used PubMedBERT to extract 768-dimensional mathematical embeddings of the text, injected those embeddings directly into the metadata, and trained one massive, unified XGBoost model to look at the text and the stats simultaneously."
+
+SLIDE 7: Results (5:30 - 7:00)
+"Here are our final results on the holdout test set. As you can see on the bar chart, the Stats-only model (XGBoost) actually outperformed the Text-only model.
+However, fusing them together yielded the best results. Our Late-Fusion average achieved the highest ROC-AUC score of 0.8486. 
+You might be wondering why the complex Early-Fusion model performed slightly worse than the simple Late-Fusion model. This is due to the 'curse of dimensionality.' By injecting 768 new textual features into the dataset, the XGBoost model suffered a massive spike in complexity and slightly overfit to the text, diluting the strong statistical signals. Simple ensemble averaging proved to be mathematically much more robust."
+
+SLIDE 8: Explainable AI / SHAP Analysis (7:00 - 8:30)
+"To move beyond a black-box AI, we applied SHAP analysis—a technique from Game Theory—to see exactly HOW features drive risk.
+Every dot on this plot is a trial. The color is the raw value, and the x-axis is how much it pushed the risk score.
+Look at the top row: Phase 4 Trials. The red dots are pushed far to the right, proving that being in Phase 4 heavily increases risk. Why? Because post-marketing trials lack the strict laboratory-grade controls of Phase 3 and involve massive populations.
+Similarly, look at Enrollment Count. The color gradient clearly shows that as patient volume increases from blue to red, the dots stretch out to the right, proving that scaling up a trial linearly spikes the statistical likelihood of an administrative mistake."
+
+SLIDE 9: Conclusions (8:30 - 9:15)
+"To conclude:
+1. Structured metadata is a stronger, more accessible predictor of risk than unstructured clinical text.
+2. Fusing the modalities improves overall performance, proving that the text and the stats contain complementary information.
+3. However, due to the curse of dimensionality, Late-Fusion (simple averaging) is the most effective and robust way to combine these signals."
+
+SLIDE 10: Future Work (9:15 - 9:45)
+"For future work, we plan to explore two massive areas. First, Data Augmentation using SMOTE to generate synthetic minority samples, which could completely neutralize our extreme 5% class imbalance. Second, we want to test massive generative LLMs like Llama-3 or GPT-4 using 'Zero-Shot' prompting to see if their advanced reasoning can outperform the structured embeddings of PubMedBERT without any training at all."
+
+SLIDE 11: Questions? (9:45 - 10:00)
+"Thank you for your time. I'd be happy to take any questions."

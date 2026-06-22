@@ -1,0 +1,135 @@
+=============================================================================
+Q&A CHEAT SHEET: Detecting Medication Dosing Errors in Clinical Trial Protocols
+=============================================================================
+
+1. "Can you briefly explain how XGBoost works?"
+
+THE ANSWER: 
+"XGBoost stands for 'eXtreme Gradient Boosting'. It works by building a series of 'decision trees' one after another. Instead of building them all independently (like a Random Forest does), XGBoost builds them sequentially. Each new tree looks at the mistakes made by the previous tree and tries to correct them. It essentially learns from its own errors over and over again until it forms one highly accurate 'super-tree' consensus. We chose it because it is widely considered the state-of-the-art algorithm for processing structured, tabular data."
+
+-----------------------------------------------------------------------------
+
+2. "How exactly did you handle the extreme 5% class imbalance?"
+
+THE ANSWER: 
+"We used a technique called 'Class Weighting'. In XGBoost, we set a parameter called `scale_pos_weight`. Because there were roughly 20 times more 'safe' trials than 'error' trials, we told the algorithm to penalize itself 20 times harder every time it missed an error trial. For the Transformer, we did the exact same thing by passing custom class weights into the Cross-Entropy Loss function during training. This forced both models to pay equal attention to the minority class."
+
+-----------------------------------------------------------------------------
+
+3. "Why did you use Isotonic Calibration on the XGBoost model?"
+
+THE ANSWER:
+"Tree-based models like XGBoost don't naturally output true 'probabilities'—they output raw confidence scores (logits) that are pushed towards 0 or 1. Because our goal was to predict real-world risk percentages, we used Isotonic Calibration on a holdout validation set to map those raw scores into true, trustworthy probabilities before we evaluated the model."
+
+-----------------------------------------------------------------------------
+
+4. "You mentioned Early-Fusion suffered from the 'Curse of Dimensionality'. Can you explain what that means?"
+
+THE ANSWER:
+"When we extracted the text embeddings from PubMedBERT, it generated 768 new numerical columns for every single trial. When we glued that onto our existing statistics dataset, the total number of features ballooned to over 1,500. 
+In machine learning, when you drastically increase the number of columns (dimensions) without drastically increasing the number of rows (trials), algorithms struggle to find true patterns and start memorizing noise instead. The XGBoost model got overwhelmed by the 768 text columns and 'overfit,' which slightly drowned out the stronger predictive signals coming from the trial statistics."
+
+-----------------------------------------------------------------------------
+
+5. "What specific text did you actually feed into the Transformer?"
+
+THE ANSWER:
+"We concatenated several free-text fields from the ClinicalTrials.gov registry into one narrative. Specifically, we fed it the 'Brief Summary', the 'Detailed Description', the 'Conditions' being treated, and the 'Arm/Intervention Descriptions'. We then truncated this combined narrative to the first 512 tokens to fit into the PubMedBERT context window."
+
+-----------------------------------------------------------------------------
+
+6. "Why did you use PubMedBERT instead of ClinicalModernBERT like the original paper did?"
+
+THE ANSWER:
+"ClinicalModernBERT is designed with a massive context window to read up to 8,192 tokens at a time. However, Transformer memory requirements scale quadratically. Processing texts that large requires massive GPU clusters (like 80GB A100s). Because we ran this locally under an 8GB VRAM constraint, we opted for PubMedBERT and truncated to 512 tokens. Even with this much lighter setup, we achieved over 98% of the paper's original predictive performance!"
+
+-----------------------------------------------------------------------------
+
+7. "What exactly is considered a 'dosing error' in this context?"
+
+THE ANSWER:
+"A dosing error means that during the clinical trial, a patient received the wrong amount of medication, received it at the wrong time, or received the wrong medication entirely. Our goal is to look at the trial's plan (the protocol) and guess if the trial is complicated enough that these mistakes are likely to happen."
+
+-----------------------------------------------------------------------------
+
+8. "Where did you get the data for this project?"
+
+THE ANSWER:
+"All of the data is public! It comes from ClinicalTrials.gov, which is a massive database run by the U.S. government. Specifically, we used a curated dataset called the CT-Dosing-Errors-Benchmark (CT-DEB) that already had the dosing error labels attached."
+
+-----------------------------------------------------------------------------
+
+9. "Why is predicting this BEFORE a trial starts actually useful?"
+
+THE ANSWER:
+"Clinical trials cost millions of dollars and involve human lives. If an AI can flag a trial as 'High Risk' for a dosing error before it starts, the organizers can rewrite the protocol to be simpler, or they can assign extra doctors to oversee the medication delivery. It saves money and prevents patient harm."
+
+-----------------------------------------------------------------------------
+
+10. "Can you explain what 'Late Fusion' actually means in simple terms?"
+
+THE ANSWER:
+"Late Fusion is just a fancy term for a simple concept: averaging. We built two completely separate AI models (one that only looked at text, and one that only looked at numbers). They both made their own independent guesses on the risk percentage, and Late Fusion just takes the average of those two guesses as the final answer."
+
+-----------------------------------------------------------------------------
+
+11. "Did you use a GPU or a CPU for this project?"
+
+THE ANSWER:
+"We used both! We used a GPU (Graphics Processing Unit) to train the PubMedBERT language model because Transformers require massive amounts of matrix math that GPUs excel at. However, we used the CPU to train the XGBoost model, because decision trees are often faster to build using standard processors."
+
+-----------------------------------------------------------------------------
+
+12. "What programming language and libraries did you use?"
+
+THE ANSWER:
+"The entire project was written in Python. For the text-processing AI, we used the 'Transformers' library by HuggingFace and PyTorch. For the statistics AI, we used the 'XGBoost' library and 'Scikit-Learn' for evaluation and calibration."
+
+-----------------------------------------------------------------------------
+
+13. "What does ROC-AUC stand for, and why is it better than standard Accuracy?"
+
+THE ANSWER:
+"ROC-AUC stands for 'Receiver Operating Characteristic - Area Under the Curve'. Standard Accuracy just measures right versus wrong guesses, which is terrible when 95% of the data is safe (the AI can just guess 'safe' every time and get a 95% Accuracy). ROC-AUC measures how well the AI ranks the trials; it guarantees that a truly high-risk trial will receive a higher score than a low-risk trial, regardless of the 5% imbalance."
+
+-----------------------------------------------------------------------------
+
+14. "Did you write the code to collect the 42,000 trials yourself?"
+
+THE ANSWER:
+"No, the dataset creation was done by the original researchers who published the CT-DEB benchmark. Our project focused purely on building the Machine Learning architecture (the XGBoost and Transformer pipelines) to predict the errors from that data."
+
+-----------------------------------------------------------------------------
+
+15. "What was the most challenging part of this entire project?"
+
+THE ANSWER:
+"Definitely handling the extreme class imbalance. Because dosing errors are so rare (only 5% of the data), both AI models desperately wanted to just predict 'No Error' for everything to get an easy A+ in training. We had to spend a lot of time fine-tuning class weights and loss functions to force the AI to care about the rare mistakes."
+
+-----------------------------------------------------------------------------
+
+16. "I see you reported the 'Brier Score'. What exactly is that and why does it matter?"
+
+THE ANSWER:
+"The Brier Score measures how 'calibrated' or trustworthy the AI's probability estimates are. Think of it as the Mean Squared Error for percentages. Because Decision Trees are notoriously bad at outputting true probabilities, we applied Isotonic Regression calibration to fix them. The lower the Brier Score, the better, and our models achieved an excellent score of ~0.04."
+
+-----------------------------------------------------------------------------
+
+17. "What is SHAP Analysis and why did you use it?"
+
+THE ANSWER:
+"SHAP stands for SHapley Additive exPlanations. It's a technique from Game Theory used to make black-box AI models explainable. Instead of just telling us 'this trial is high risk', SHAP calculates exactly how much each individual feature (like Enrollment Count) mathematically contributed to that final risk score. It proves our AI learned logical medical consequences."
+
+-----------------------------------------------------------------------------
+
+18. "If you had more time, how would you fix the 5% class imbalance besides using class weights?"
+
+THE ANSWER:
+"We would use Data Augmentation, specifically SMOTE (Synthetic Minority Over-sampling Technique). Instead of just penalizing the AI for making mistakes, SMOTE would mathematically generate fake, synthetic clinical trials that look like the 5% error group, balancing the training data 50/50."
+
+-----------------------------------------------------------------------------
+
+19. "How do you think modern LLMs like ChatGPT would handle this task compared to your PubMedBERT model?"
+
+THE ANSWER:
+"That's an area of future research. Our PubMedBERT was fine-tuned specifically for this task, but we'd love to test massive generative LLMs like GPT-4 or Llama-3 using 'Zero-Shot' prompting. It would be fascinating to see if their advanced baseline reasoning could predict dosing errors without any prior training at all."
