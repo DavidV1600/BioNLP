@@ -21,12 +21,12 @@
 \end{itemize}
 \end{frame}
 
-\begin{frame}{The Challenge}
+\begin{frame}{The Challenge: Extreme Data Imbalance}
 \begin{itemize}
-\item Identify protocols with high inherent risk of dosing errors.
-\item CT-DEB dataset: $>$42,000 clinical trial narratives.
-\item Binary classification task.
-\item Severe class imbalance: only $\sim$5\% positive examples.
+\item \textbf{The Needle in a Haystack:} Only $\sim$5\% of historical trials experienced a dosing error.
+\item \textbf{Why Accuracy is Broken:} A naïve AI guessing "Safe" 100\% of the time achieves 95\% accuracy.
+\item \textbf{Advanced Metrics Required:} We must use ROC-AUC and F1-Scores to evaluate true learning.
+\item \textbf{Probability Calibration:} We use Isotonic Regression to optimize the \textit{Brier Score}, ensuring predicted risk percentages are mathematically trustworthy.
 \end{itemize}
 \end{frame}
 
@@ -74,14 +74,14 @@
 \begin{column}{0.4\textwidth}
 \begin{table}
 \resizebox{\textwidth}{!}{%
-\begin{tabular}{lcc}
+\begin{tabular}{lcccccc}
 \hline
-Model & ROC-AUC & F1 \\
+Model & AUC & Brier & F1 & Rec & Prec & Acc \\
 \hline
-Text-Only & 0.8210 & 0.2526 \\
-Stats-Only & 0.8466 & 0.2972 \\
-Early-Fusion & 0.8475 & 0.2904 \\
-Late-Fusion & \textbf{0.8486} & \textbf{0.3112} \\
+Text & 0.821 & 0.078 & 0.261 & 0.461 & 0.182 & 0.872 \\
+Stats & 0.846 & \textbf{0.042} & 0.297 & 0.477 & 0.216 & 0.889 \\
+Early & 0.847 & 0.042 & 0.290 & \textbf{0.538} & 0.198 & 0.870 \\
+Late & \textbf{0.848} & 0.049 & \textbf{0.311} & 0.332 & \textbf{0.292} & \textbf{0.927} \\
 \hline
 \end{tabular}%
 }
@@ -124,10 +124,9 @@ SHAP proves the AI learned logical, real-world clinical consequences!
 
 \begin{frame}{Future Work}
 \begin{itemize}
-\item Compare BioBERT, ClinicalBERT, and PubMedBERT
-\item Expand SHAP explainability analysis
-\item Explore LLM Zero-shot Prompting for feature extraction
-\item Extension to other clinical trial safety tasks
+\item \textbf{Data Augmentation:} Implement SMOTE to generate synthetic minority samples and mathematically neutralize the 5\% class imbalance.
+\item \textbf{Generative LLMs:} Test massive models like Llama-3 or GPT-4 using "Zero-Shot" prompting to evaluate baseline clinical reasoning vs. trained Embeddings.
+\item \textbf{Expand Explainability:} Apply SHAP analysis to the multimodal fusion models.
 \end{itemize}
 \end{frame}
 
