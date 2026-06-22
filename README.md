@@ -1,6 +1,6 @@
 # BioNLP Project: Reproducing Dosing Error Risk Stratification in Clinical Trials
 
-This repository contains the replication study and codebase for reproducing the baseline results of the paper **"Early Risk Stratification of Dosing Errors in Clinical Trials Using Machine Learning"** (arXiv:2602.22285), presented as part of the **CT-DEB 2026** (Clinical Trial Dosing Errors Benchmark) shared task at the CL4Health workshop (LREC-COLING 2026).
+This repository contains the replication study and codebase for reproducing the baseline results of the paper **"Early Risk Stratification of Dosing Errors in Clinical Trials Using Machine Learning"** ([arXiv:2602.22285](https://arxiv.org/abs/2602.22285)), presented as part of the **CT-DEB 2026** (Clinical Trial Dosing Errors Benchmark) shared task at the CL4Health workshop (LREC-COLING 2026).
 
 ---
 
