@@ -12,3 +12,14 @@ __pycache__/
 *.bin
 *.pkl
 *.safetensors
+
+# Exclude documentation and presentation files from github
+project_report.tex
+presentation.tex
+speaker_notes.txt
+qa_cheat_sheet.txt
+PRESENTATION.md
+REPORT.md
+model_comparison.png
+shap_summary.png
+results_comparison.txt
