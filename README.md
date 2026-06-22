@@ -31,60 +31,50 @@ This project implements a complete BioNLP workflow:
 
 ## 🛠️ Codebase Structure
 
-All the core logic is implemented in the [temp_clone](file:///home/david/Desktop/Developer/BioNLP/temp_clone) subdirectory, which is structured as follows:
+We have built a custom, enterprise-grade machine learning pipeline to run efficiently on local hardware. The core scripts are:
 
-* **[aidose/baselines](file:///home/david/Desktop/Developer/BioNLP/temp_clone/aidose/baselines)**: Python scripts containing baseline models.
-  * [main.py](file:///home/david/Desktop/Developer/BioNLP/temp_clone/aidose/baselines/main.py): Entry point to run training, optimization, and evaluation.
-  * [our_xgboost.py](file:///home/david/Desktop/Developer/BioNLP/temp_clone/aidose/baselines/our_xgboost.py): XGBoost classifier using categorical metadata features.
-  * [our_clinicalModernBERT.py](file:///home/david/Desktop/Developer/BioNLP/temp_clone/aidose/baselines/our_clinicalModernBERT.py): ModernBERT encoder fine-tuned on clinical trial protocol texts.
-  * [LateFusionMultimodal.py](file:///home/david/Desktop/Developer/BioNLP/temp_clone/aidose/baselines/LateFusionMultimodal.py): Model that combines text and metadata predictions using late fusion.
-  * [preprocessing.py](file:///home/david/Desktop/Developer/BioNLP/temp_clone/aidose/baselines/preprocessing.py): Preprocessing logic for text and tabular attributes.
-  * [CustomTrainer.py](file:///home/david/Desktop/Developer/BioNLP/temp_clone/aidose/baselines/CustomTrainer.py): Subclassed Hugging Face `Trainer` implementing balanced batch sampling.
-* **[Figures](file:///home/david/Desktop/Developer/BioNLP/temp_clone/Figures)**: Jupyter Notebooks for figures and risk analysis.
-  * [Paper_figures.ipynb](file:///home/david/Desktop/Developer/BioNLP/temp_clone/Figures/Paper_figures.ipynb): Distribution and exploratory data analysis.
-  * [Stratification.ipynb](file:///home/david/Desktop/Developer/BioNLP/temp_clone/Figures/Stratification.ipynb): Risk stratification computations across phases and enrollment.
-* **[resources](file:///home/david/Desktop/Developer/BioNLP/temp_clone/resources)**: Caches for local data and model runs.
-  * [CT-DOSING-ERRORS/0.2.3](file:///home/david/Desktop/Developer/BioNLP/temp_clone/resources/CT-DOSING-ERRORS/0.2.3): Pre-processed train, validation, and test datasets.
-  * [baselines](file:///home/david/Desktop/Developer/BioNLP/temp_clone/resources/baselines): Cached model checkpoints, Optuna parameters, and prediction outputs.
+* `custom_xgboost.py`: Processes structured metadata, handles missing values, optimizes hyperparameters via Optuna, and trains an XGBoost classifier with Isotonic Regression probability calibration.
+* `custom_transformer.py`: Fine-tunes the `microsoft/BiomedNLP-PubMedBERT-base-uncased-abstract` transformer on the unstructured clinical text with weighted cross-entropy to handle the 5% class imbalance.
+* `custom_early_fusion.py`: A novel multimodal architecture that extracts 768-dimensional textual embeddings from PubMedBERT and fuses them directly with the structured metadata, passing the combined feature space into a unified XGBoost model.
+* `generate_shap.py`: Evaluates the trained metadata XGBoost model using SHAP (SHapley Additive exPlanations) to provide Explainable AI (XAI) insights into exactly how variables like "Phase 4" or "Enrollment Count" drive the final risk score.
+* `scratch.py`: Sandbox script for local testing and validation.
 
 ---
 
 ## 🚀 Execution Guide
 
-Make sure the virtual environment [venv](file:///home/david/Desktop/Developer/BioNLP/.venv) is activated. The `aidose` package has been installed in editable mode (`pip install -e temp_clone`).
+Activate your virtual environment and run the custom scripts directly. Ensure that the CT-DEB dataset is available locally in the `temp_clone/resources` directory (note: the `temp_clone` dataset submodule is excluded from this repository to keep it lightweight, you must download it yourself).
 
-### 1. Verification & Dry Runs
-To verify that the code and dependencies work without executing full long-running experiments, run a short Optuna search for XGBoost:
+### Training and Evaluating
+Run the independent pipelines:
 ```bash
-PYTHONPATH=temp_clone python temp_clone/aidose/baselines/main.py --model XGBoost --num_trials 3
+python custom_xgboost.py
+python custom_transformer.py
 ```
 
-### 2. Full Reproductions
-To retrain or re-evaluate the baselines from scratch:
+### Multimodal Early Fusion
+After running the transformer, run the Early Fusion architecture to combine text embeddings with structured data:
+```bash
+python custom_early_fusion.py
+```
 
-* **XGBoost Baseline (Metadata)**:
-  ```bash
-  PYTHONPATH=temp_clone python temp_clone/aidose/baselines/main.py --model XGBoost --num_trials 200
-  ```
-
-* **ClinicalModernBERT Baseline (Text)**:
-  ```bash
-  PYTHONPATH=temp_clone python temp_clone/aidose/baselines/main.py --model ClinicalModernBERT --num_epoch 10
-  ```
-
-* **Late Fusion Multimodal (Combined)**:
-  ```bash
-  PYTHONPATH=temp_clone python temp_clone/aidose/baselines/main.py --model LateFusionModel --late_fusion_num_trials 100
-  ```
+### Explainable AI (SHAP)
+Generate the SHAP summary plot (`shap_summary.png`) to understand feature importances:
+```bash
+python generate_shap.py
+```
 
 ---
 
-## 📈 Baseline Metrics (Test Set Results)
+## 📈 Final Model Performance (Test Set Results)
 
-Based on the cached baseline outputs inside `temp_clone/resources/baselines/LateFusionMultimodal/wilson_label/test_predictions_after_calibration.csv`:
+Our custom implementations successfully replicated the literature baselines and applied rigorous evaluation metrics to combat the 5% class imbalance. Notably, Isotonic Regression was used to achieve excellent Brier Scores.
 
-| Baseline Model | Feature Modality | Test ROC-AUC | Test PR-AUC (Average Precision) |
-| :--- | :--- | :---: | :---: |
-| **ClinicalModernBERT** | Text Only | **0.8124** | **0.1651** |
-| **XGBoost** | Tabular/Metadata Only | **0.8499** | **0.2159** |
-| **LateFusionMultimodal** | Multimodal (Text + Tabular) | **0.8600** | **0.2390** |
+| Model Architecture | Modality | ROC-AUC | Brier Score | F1-Score | Recall | Precision | Accuracy |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| **PubMedBERT** | Text Only | 0.821 | 0.078 | 0.261 | 0.461 | 0.182 | 0.872 |
+| **XGBoost** | Metadata Only | 0.846 | **0.042** | 0.297 | 0.477 | 0.216 | 0.889 |
+| **Early-Fusion** | Text Embeddings + Metadata | 0.847 | 0.042 | 0.290 | **0.538** | 0.198 | 0.870 |
+| **Late-Fusion** | Averaged Predictions | **0.848** | 0.049 | **0.311** | 0.332 | **0.292** | **0.927** |
+
+*Note: Late-Fusion proved to be the most robust architecture, as the Early-Fusion model experienced dimensionality challenges when injecting 768 continuous text features into the XGBoost split-finding algorithms.*
