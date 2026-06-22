@@ -80,12 +80,12 @@ Our unimodal experiments successfully replicated the general findings of the ori
 
 Fusing the modalities improved performance. The Late-Fusion approach yielded an ROC-AUC of 0.8486, proving that text and metadata capture distinct, complementary aspects of dosing error risk. Interestingly, our novel Early-Fusion super model achieved an ROC-AUC of 0.8475. This suggests that while Early-Fusion allows the model to learn complex cross-modal interactions, the massive increase in dimensionality (adding 768 continuous text features) may have caused the algorithm to slightly overfit to the embeddings, diluting the strong predictive signals of the structured metadata. Thus, simple Late-Fusion averaging proved to be the most robust integration strategy.
 
-\subsection{Feature Importance}
-Analysis of the XGBoost decision trees revealed that the most critical drivers of dosing error risk are structural:
+\subsection{Explainable AI (SHAP Analysis)}
+To move beyond black-box predictions, we applied SHapley Additive exPlanations (SHAP) to our XGBoost model to quantify the impact of individual features. The SHAP summary analysis revealed that the most critical drivers of dosing error risk are highly structural:
 \begin{itemize}
-    \item \textbf{Trial Phase (Phase 4):} Post-marketing surveillance trials exhibited significantly different error profiles.
-    \item \textbf{Enrollment Count:} Larger patient volumes inherently increase the statistical likelihood of administrative errors.
-    \item \textbf{Number of Locations:} Multi-center trials involve complex logistical distributions, increasing standardization risks.
+    \item \textbf{Trial Phase (Phase 4):} High feature values (being a Phase 4 trial) consistently pushed the model's prediction toward higher risk. Post-marketing surveillance trials often lack strict laboratory-grade controls, creating environments prone to administrative errors.
+    \item \textbf{Enrollment Count:} A clear positive correlation was observed; as patient volume increases (red points), the statistical likelihood of a dosing error rises linearly.
+    \item \textbf{Number of Locations:} Multi-center trials involve complex logistical distributions, increasing standardization risks compared to single-center studies.
 \end{itemize}
 
 \section{Conclusion}

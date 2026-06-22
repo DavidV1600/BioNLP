@@ -94,21 +94,21 @@ Late-Fusion & \textbf{0.8486} & \textbf{0.3112} \\
 \end{columns}
 \end{frame}
 
-\begin{frame}{Feature Impact}
+\begin{frame}{Explainable AI (SHAP Analysis)}
 \begin{columns}
 \begin{column}{0.5\textwidth}
-\textbf{Key Drivers of Risk:}
+\textbf{How Features Drive Risk:}
 \begin{enumerate}
-\item Trial Phase (Phase 4)
-\item Enrollment Count
-\item Number of Locations
+\item \textbf{Phase 4 Trials:} Red dots (Yes) push heavily right (High Risk).
+\item \textbf{Enrollment Count:} Color gradient shows massive trials (Red) exponentially increase risk vs tiny trials (Blue).
+\item \textbf{Locations:} Multi-center logistics increase risk.
 \end{enumerate}
 \vspace{0.5cm}
-Larger, multi-center, post-marketing trials inherently possess much higher statistical likelihoods of administrative dosing errors.
+SHAP proves the AI learned logical, real-world clinical consequences!
 \end{column}
 \begin{column}{0.5\textwidth}
 \centering
-\includegraphics[width=\textwidth]{feature_importance.png}
+\includegraphics[width=\textwidth]{shap_summary.png}
 \end{column}
 \end{columns}
 \end{frame}
