@@ -23,9 +23,9 @@ Medication dosing errors in clinical trials represent a severe risk to patient s
 \end{abstract}
 
 \section{Introduction}
-Clinical trials are complex, multi-center operations governed by extensive protocol documents. Inadvertent medication dosing errors during a trial can compromise the validity of the study and pose significant dangers to participants. Identifying protocols that possess a high inherent risk of errors \textit{before} the trial begins is a critical challenge in pharmacovigilance. 
+Clinical trials are complex, multi-center operations governed by extensive protocol documents that dictate everything from participant eligibility to highly specific pharmacological interventions. Inadvertent medication dosing errors during a trial are disastrous; they can compromise the scientific validity of the study, result in multi-million dollar regulatory delays, and, most importantly, pose life-threatening dangers to human participants. Identifying protocols that possess a high inherent risk of errors \textit{before} the trial begins is therefore a critical challenge in modern pharmacovigilance. 
 
-This project tackles the Clinical Trial Dosing Error Benchmark (CT-DEB) introduced by Hêche et al. \cite{heche2026}, an imbalanced classification problem wherein only approximately 5\% of historical trials experienced a reported dosing error. By applying modern Machine Learning (ML) and Natural Language Processing (NLP) techniques, we built predictive pipelines to stratify trials based on their estimated risk.
+Traditionally, risk assessment requires manual review by clinical experts, a process that is slow, expensive, and subjective. This project tackles the Clinical Trial Dosing Error Benchmark (CT-DEB) introduced by Hêche et al. \cite{heche2026}, aiming to automate this process. It represents a highly imbalanced classification problem wherein only approximately 5\% of historical trials experienced a reported dosing error. By applying modern Machine Learning (ML) and Natural Language Processing (NLP) techniques, we built sophisticated predictive pipelines capable of reading thousands of pages of trial data in seconds, allowing us to stratify trials based on their estimated risk.
 
 \section{Methodology}
 
@@ -34,10 +34,10 @@ The dataset comprises 42,112 completed or terminated interventional clinical tri
 
 A critical characteristic of this dataset is its severe class imbalance, with only $\sim$5\% of the trials representing the positive (error) class. To ensure rigorous evaluation and prevent data leakage, we utilized the benchmark's pre-defined data splits: 80\% for training, 10\% for hyper-parameter tuning and validation, and a strict 10\% holdout for final test evaluation.
 
-We split the features into two distinct modalities:
+We split the features into two distinct modalities, each requiring specialized preprocessing:
 \begin{enumerate}
-    \item \textbf{Structured Metadata:} Categorical and numerical statistics characterizing the trial's design (e.g., Enrollment Count, Trial Phase, Number of Locations, Intervention Types).
-    \item \textbf{Unstructured Narratives:} Free-text English paragraphs written by clinicians describing the trial's purpose, arm groups, and intervention methodologies.
+    \item \textbf{Structured Metadata:} Categorical and numerical statistics characterizing the trial's design (e.g., Enrollment Count, Trial Phase, Number of Locations, Intervention Types). Missing continuous values were maintained to utilize XGBoost's native sparsity-aware split finding algorithms, while categorical variables were one-hot encoded to represent distinct trial attributes.
+    \item \textbf{Unstructured Narratives:} Free-text English paragraphs written by clinicians describing the trial's purpose, arm groups, and intervention methodologies. Missing text entries were standardized by injecting an "UNKNOWN" token, and all text was concatenated into a unified clinical narrative sequence before being tokenized.
 \end{enumerate}
 
 \subsection{Replicating the Baselines}
@@ -57,7 +57,7 @@ Moving beyond the simple unimodal baselines, we implemented two multimodal integ
 \section{Results and Discussion}
 
 \subsection{Performance Metrics}
-Table \ref{tab:results} outlines the performance of our models evaluated on the holdout test set. Given the severe class imbalance, we prioritize ROC-AUC and the F1-Score as our primary evaluation metrics.
+Table \ref{tab:results} outlines the performance of our models evaluated on the holdout test set. Given the severe class imbalance (where a naïve model predicting "Safe" 100\% of the time would still achieve 95\% accuracy), standard Accuracy is a highly misleading metric. Therefore, we prioritize the \textbf{ROC-AUC} (Receiver Operating Characteristic Area Under Curve) and the \textbf{F1-Score} as our primary evaluation metrics to evaluate classification capability. Additionally, we compute the \textbf{Brier Score} (Mean Squared Error for probabilities) to evaluate how well-calibrated and trustworthy the models' raw probability outputs are.
 
 \begin{table}[h!]
 \centering
@@ -88,8 +88,10 @@ To move beyond black-box predictions, we applied SHapley Additive exPlanations (
     \item \textbf{Number of Locations:} Multi-center trials involve complex logistical distributions, increasing standardization risks compared to single-center studies.
 \end{itemize}
 
-\section{Conclusion}
+\section{Conclusion and Future Work}
 This project successfully implemented an end-to-end Machine Learning pipeline for the early risk stratification of clinical trials. By building upon published baselines and experimenting with novel Early-Fusion architectures, we demonstrated that medication safety risks can be effectively anticipated from upstream trial design characteristics. These predictive models can serve as proactive decision-support tools, enabling organizers to implement targeted safeguards in high-risk trials before a single patient is dosed.
+
+Future work in this domain should explore the use of massive Large Language Models (LLMs), such as Llama-3 or GPT-4, using zero-shot or few-shot prompting techniques. Comparing the reasoning capabilities of generative LLMs against the highly structured embeddings of PubMedBERT could further push the boundaries of automated pharmacovigilance. Furthermore, integrating synthetic data generation techniques like SMOTE could help completely neutralize the extreme class imbalance present in real-world clinical data.
 
 \begin{thebibliography}{9}
 \bibitem{heche2026}
